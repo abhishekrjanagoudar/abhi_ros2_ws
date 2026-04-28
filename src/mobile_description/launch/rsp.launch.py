@@ -35,11 +35,12 @@ def generate_launch_description():
         }]
     )
 
-    # Joint State Publisher GUI: interactive slider control for joints
+    # Joint State Publisher GUI: needs robot_description to discover joints and show sliders
     node_joint_state_publisher = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         output='screen',
+        parameters=[{'robot_description': ParameterValue(robot_description_raw, value_type=str)}]
     )
 
     # Launch argument: use simulated time (useful for Gazebo)

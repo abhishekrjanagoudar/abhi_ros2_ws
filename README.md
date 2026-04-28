@@ -26,6 +26,7 @@ mobile_description/
 ```
 base_link (reference frame)
 ├── chassis (blue box body)
+│   └── caster_wheel (rear support sphere)
 ├── left_wheel (cylinder, rotates on Y-axis)
 └── right_wheel (cylinder, rotates on Y-axis)
 ```
@@ -34,6 +35,7 @@ base_link (reference frame)
 - **base_link**: Reference frame (no geometry)
 - **chassis**: Main body (0.4m × 0.3m × 0.15m box)
 - **wheels**: 0.05m radius cylinders
+- **caster_wheel**: 0.025m radius sphere at rear
 
 ## Building and Running
 

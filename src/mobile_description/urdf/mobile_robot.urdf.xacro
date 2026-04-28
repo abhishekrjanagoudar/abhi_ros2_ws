@@ -37,12 +37,32 @@
     </visual>
   </link>
 
+  <!-- Caster wheel at back -->
+  <link name="caster_wheel">
+    <visual>
+      <!-- Rotate cylinder to lie flat (Y-axis rotation) -->
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius/2}" length="${wheel_width}"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
   <!-- ==================== JOINTS ==================== -->
   <!-- Attach chassis to base_link -->
   <joint name="chassis_joint" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
     <origin xyz="-0.1 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Attach caster to chassis back, at same height as drive wheels -->
+  <joint name="caster_wheel_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="caster_wheel"/>
+    <!-- x: rear edge of chassis, y: centered, z: match drive wheel height (wheel_zoff in world = 0.05) -->
+    <origin xyz="${-base_length/2} 0 ${wheel_zoff}" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== MACROS ==================== -->

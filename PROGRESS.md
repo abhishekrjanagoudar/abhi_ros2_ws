@@ -1,6 +1,7 @@
 # Project Progress
 
 ## Current Step
+Step 5: Gazebo
 Step 4: RViz
 Step 3: TF tree
 
