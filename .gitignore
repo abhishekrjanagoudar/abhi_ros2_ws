@@ -1,0 +1,7 @@
+.gitnexus
+/build/
+/devel/
+/install/
+/log/
+.claude/
+
