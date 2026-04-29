@@ -1,30 +1,63 @@
+# =============================================================================
+# Controller Manager Configuration
+# =============================================================================
+# Controllers loaded by gz_ros2_control plugin (defined in URDF).
+# The plugin reads this file and spawns controller_manager which manages:
+#   - diff_cont   : DiffDriveController -> consumes /diff_cont/cmd_vel (TwistStamped)
+#                                           publishes /diff_cont/odom + odom->base_link TF
+#   - joint_broad : JointStateBroadcaster -> publishes /joint_states from wheel encoders
+#
+# Used by: sim.launch.py (spawner nodes load these controllers at runtime)
+# Loaded via: <plugin>$(find mobile_description)/config/my_controllers.yaml</plugin>
+# =============================================================================
+
 controller_manager:
   ros__parameters:
-    update_rate: 30  # Hz
-    # use_sim_time: true  # Gazebo plugin automatically sets this
+    update_rate: 30  # Hz - control loop frequency (must be >= controller publish_rate)
 
+    # Controller type registration (instances spawned via `ros2 run controller_manager spawner <name>`)
     diff_cont:
       type: diff_drive_controller/DiffDriveController
 
     joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+# -----------------------------------------------------------------------------
+# Differential Drive Controller
+# -----------------------------------------------------------------------------
+# Subscribes: /diff_cont/cmd_vel  (geometry_msgs/TwistStamped, Jazzy default)
+# Publishes : /diff_cont/odom     (nav_msgs/Odometry)
+#             odom -> base_link TF (when enable_odom_tf: true)
+# -----------------------------------------------------------------------------
 diff_cont:
   ros__parameters:
-    publish_rate: 50.0
+    publish_rate: 50.0  # Hz - odometry publish rate
 
-    left_wheel_names: ['left_wheel_joint']
+    # Joint names from URDF (must match <joint name="..."> in ros2_control block)
+    left_wheel_names:  ['left_wheel_joint']
     right_wheel_names: ['right_wheel_joint']
 
-    # Match URDF dimensions
-    wheel_separation: 0.35   # wheel_ygap(0.175) * 2
-    wheel_radius: 0.05
+    # Robot geometry (must match URDF dimensions exactly)
+    wheel_separation: 0.35   # meters - distance between left and right wheel centers (wheel_ygap * 2)
+    wheel_radius:     0.05   # meters - wheel rolling radius
 
-    # Enable odometry TF publishing
+    # Odometry TF tree: publishes odom -> base_link transform
     enable_odom_tf: true
+    base_frame_id:  base_link
+    odom_frame_id:  odom
 
-    base_frame_id: base_link
+    # Velocity limits (safety - prevents commands that exceed hardware capability)
+    linear.x.max_velocity:  1.0    # m/s
+    linear.x.min_velocity: -1.0
+    angular.z.max_velocity:  2.0   # rad/s
+    angular.z.min_velocity: -2.0
 
+# -----------------------------------------------------------------------------
+# Joint State Broadcaster
+# -----------------------------------------------------------------------------
+# Reads wheel position/velocity state interfaces from gz_ros2_control hardware
+# and publishes /joint_states for robot_state_publisher to consume.
+# -----------------------------------------------------------------------------
 joint_broad:
   ros__parameters:
     use_sim_time: true
