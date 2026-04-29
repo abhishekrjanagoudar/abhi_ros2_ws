@@ -6,8 +6,7 @@ project(mobile_description)
 # =============================================================================
 # Package layout:
 #   launch/   — Launch files (rsp, sim, gazebo, rviz)
-#   src/      — Top-level orchestrator launchers (robot.launch.py)
-#   config/   — Controllers YAML, ros_gz_bridge YAML, robot URDF, env worlds/models
+#   config/   — Robot config and environment bundles (env/<name>/worlds + models)
 #   rviz/     — Default RViz configurations
 # =============================================================================
 
@@ -24,7 +23,6 @@ find_package(xacro REQUIRED)
 # Each directory ships to: install/mobile_description/share/mobile_description/<dir>
 install(DIRECTORY
   launch
-  src
   config
   rviz
   DESTINATION share/${PROJECT_NAME}

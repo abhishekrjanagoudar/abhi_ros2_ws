@@ -7,19 +7,18 @@ bridges Gazebo <-> ROS topics, and starts ros2_control controllers.
 This file is the simulation backbone — it is included by robot.launch.py.
 
 Behavior:
-  - env_name resolves automatically to:
-        config/env/<env_name>/worlds/*.world   (first .world file found)
-        config/env/<env_name>/models/          (added to GZ_SIM_RESOURCE_PATH)
-  - GZ_SIM_RESOURCE_PATH walks every env's models/textures so meshes resolve
-    correctly across all environments.
+  - env resolves automatically to:
+        config/env/<env>/worlds/*.world   (first .world file found)
+        config/env/<env>/models/          (added to Gazebo resource paths)
 
 Launch arguments:
-  env_name : Environment subfolder under config/env/   (default: cpr_office)
+  env      : Environment subfolder under config/env/  (default: cpr_office)
+  env_name : Backward-compatible alias for env
   gz       : 'true' to launch Gazebo GUI, 'false' for headless (default: false)
 
 Usage:
   ros2 launch mobile_description gazebo.launch.py
-  ros2 launch mobile_description gazebo.launch.py env_name:=office_small gz:=true
+  ros2 launch mobile_description gazebo.launch.py env:=office_small gz:=true
 """
 
 import os
@@ -58,25 +57,15 @@ def _find_world_file(env_path):
     return os.path.join(worlds_dir, candidates[0])
 
 
-def _build_resource_path(env_root):
-    """Walk every env subfolder and collect dirs Gazebo needs to search.
-
-    Required for:
-      - model:// URI resolution (models/ root + each models/<name>/)
-      - bare texture filenames embedded in .dae meshes (texture dirs)
-    """
+def _build_resource_path(model_path):
+    """Collect selected environment model dirs Gazebo needs to search."""
     dirs = []
-    for sub in sorted(os.listdir(env_root)):
-        env_path = os.path.join(env_root, sub)
-        if not os.path.isdir(env_path):
-            continue
-        for dirpath, _, filenames in os.walk(env_path):
+    if os.path.isdir(model_path):
+        dirs.append(model_path)
+        for dirpath, _, filenames in os.walk(model_path):
             if filenames:
                 dirs.append(dirpath)
-            if os.path.basename(dirpath) == 'models':
-                dirs.append(dirpath)
 
-    # Deduplicate, preserve order
     seen, unique = set(), []
     for d in dirs:
         if d not in seen:
@@ -90,16 +79,17 @@ def _build_resource_path(env_root):
 # =============================================================================
 def generate_launch_description():
     pkg_share = get_package_share_directory('mobile_description')
-    env_root  = os.path.join(pkg_share, 'config', 'env')
+    env_root = os.path.join(pkg_share, 'config', 'env')
 
-    declare_env_name = DeclareLaunchArgument(
-        'env_name',
+    declare_env = DeclareLaunchArgument(
+        'env',
         default_value='cpr_office',
-        description=(
-            'Environment to load. Subfolder under config/env/. Options: '
-            'cpr_office, cpr_office_construction, office_small, '
-            'office_env_large, office_earthquake'
-        ),
+        description='Environment to load. Subfolder under config/env/.',
+    )
+    declare_env_name_alias = DeclareLaunchArgument(
+        'env_name',
+        default_value='',
+        description='Deprecated alias for env. Prefer env:=<name>.',
     )
     declare_gz_gui = DeclareLaunchArgument(
         'gz',
@@ -108,10 +98,12 @@ def generate_launch_description():
     )
 
     def launch_setup(context, *args, **kwargs):
-        env_name = LaunchConfiguration('env_name').perform(context)
-        gz_gui   = LaunchConfiguration('gz').perform(context).lower() == 'true'
+        env_name_alias = LaunchConfiguration('env_name').perform(context)
+        env_name = env_name_alias or LaunchConfiguration('env').perform(context)
+        gz_gui = LaunchConfiguration('gz').perform(context).lower() == 'true'
 
-        env_path   = os.path.join(env_root, env_name)
+        env_path = os.path.join(env_root, env_name)
+        model_path = os.path.join(env_path, 'models')
         world_file = _find_world_file(env_path)
         if world_file is None:
             world_file = 'empty.sdf'  # graceful fallback
@@ -122,10 +114,11 @@ def generate_launch_description():
             gz_flags += ' -s --headless-rendering'
         gz_args_str = f'{gz_flags} {world_file} --render-engine ogre'
 
-        gz_resource_path = _build_resource_path(env_root)
+        gz_resource_path = _build_resource_path(model_path)
 
         return [
             SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', gz_resource_path),
+            SetEnvironmentVariable('GAZEBO_MODEL_PATH', model_path),
 
             # 1. Robot State Publisher (sim time on)
             IncludeLaunchDescription(
@@ -185,7 +178,8 @@ def generate_launch_description():
         ]
 
     return LaunchDescription([
-        declare_env_name,
+        declare_env,
+        declare_env_name_alias,
         declare_gz_gui,
         OpaqueFunction(function=launch_setup),
     ])
