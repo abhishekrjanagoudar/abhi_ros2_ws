@@ -1,0 +1,33 @@
+# ros_gz_bridge configuration for mobile_robot simulation
+# Used by sim.launch.py via the 'config_file' parameter approach.
+#
+# Direction field:
+#   GZ_TO_ROS  — Gazebo → ROS  (sensor data flowing out)
+#   ROS_TO_GZ  — ROS → Gazebo  (commands flowing in)
+#   BIDIRECTIONAL — both ways
+#
+# gz_topic_name must match what `gz topic -l` shows in the running sim.
+# ROS topic is what nodes like Nav2, RViz, teleop will subscribe to.
+
+# ── Clock ────────────────────────────────────────────────────────────────────
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# ── LiDAR Scan ───────────────────────────────────────────────────────────────
+# URDF uses <topic>/scan</topic> (absolute) → Gazebo publishes to /scan
+- ros_topic_name: "/scan"
+  gz_topic_name: "/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+
+# ── cmd_vel (teleop → robot) ──────────────────────────────────────────────────
+# Uncomment if you want to bridge /cmd_vel directly instead of using diff_cont
+# - ros_topic_name: "/cmd_vel"
+#   gz_topic_name: "/cmd_vel"
+#   ros_type_name: "geometry_msgs/msg/Twist"
+#   gz_type_name: "gz.msgs.Twist"
+#   direction: ROS_TO_GZ

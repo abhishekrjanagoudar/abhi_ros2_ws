@@ -238,7 +238,7 @@
   <!-- Load ros2_control plugin: bridges Gazebo Harmonic physics with ROS 2 controllers -->
   <gazebo>
     <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find mobile_description)/config/my_controllers.yaml</parameters>
+      <parameters>$(find mobile_description)/config/robot/my_controllers.yaml</parameters>
     </plugin>
   </gazebo>
 
@@ -252,7 +252,7 @@
            - topic "scan" → Gazebo publishes /scan → bridged to ROS /scan -->
     <sensor name="laser" type="gpu_lidar">
       <pose>0 0 0 0 0 0</pose>
-      <topic>scan</topic>
+      <topic>/scan</topic>
       <update_rate>10</update_rate>
       <always_on>true</always_on>
       <visualize>true</visualize>
