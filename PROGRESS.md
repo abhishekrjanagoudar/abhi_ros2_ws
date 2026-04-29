@@ -1,7 +1,7 @@
 # Project Progress
 
 ## Current Step
-Step 6: ros2_control
+Step 7: Nav2
 
 ## Completed Steps
 - [x] Step 1: Workspace Setup
