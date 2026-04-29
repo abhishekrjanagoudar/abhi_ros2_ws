@@ -1,100 +1,226 @@
 <?xml version="1.0"?>
+<!--
+  Mobile Robot URDF (Xacro)
+  =========================
+  Differential drive robot for ROS 2 Jazzy + Gazebo Harmonic.
+
+  Tree:
+    base_link (root, no geometry)
+    └── chassis     (blue box body, fixed)
+        └── caster_wheel  (rear support, fixed)
+    ├── left_wheel   (front-left, continuous rotation)
+    └── right_wheel  (front-right, continuous rotation)
+
+  Frame convention (world coords when robot at origin):
+    +X = forward, +Y = left, +Z = up
+    Ground plane at z=0.
+-->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mobile_robot">
-  <!-- URDF: Defines robot structure (links and joints)
-       Tree: base_link → chassis, left_wheel, right_wheel, caster_wheel
-       Links: physical parts; Joints: connections (fixed or rotating)
-  -->
 
   <!-- ==================== PROPERTIES ==================== -->
-  <!-- Robot chassis dimensions (meters) -->
-  <xacro:property name="base_width" value="0.3"/>
-  <xacro:property name="base_length" value="0.4"/>
-  <xacro:property name="base_height" value="0.15"/>
+  <!-- Chassis dimensions (meters) -->
+  <xacro:property name="base_width"  value="0.3"/>   <!-- Y -->
+  <xacro:property name="base_length" value="0.4"/>   <!-- X -->
+  <xacro:property name="base_height" value="0.15"/>  <!-- Z -->
 
   <!-- Wheel dimensions and placement -->
   <xacro:property name="wheel_radius" value="0.05"/>
-  <xacro:property name="wheel_width" value="0.04"/>
-  <xacro:property name="wheel_ygap" value="0.175"/>  <!-- lateral distance from center -->
-  <xacro:property name="wheel_zoff" value="0.05"/>   <!-- height from ground -->
-  <xacro:property name="wheel_xoff" value="0.1"/>    <!-- forward position -->
+  <xacro:property name="wheel_width"  value="0.04"/>
+  <xacro:property name="wheel_ygap"   value="0.175"/> <!-- distance from center -->
+  <xacro:property name="wheel_zoff"   value="0.05"/>  <!-- wheel axis height = wheel_radius (touch ground) -->
+  <xacro:property name="wheel_xoff"   value="0.1"/>   <!-- forward offset -->
+
+  <!-- Caster derived size -->
+  <xacro:property name="caster_radius" value="${wheel_radius/2}"/>
+
+  <!-- ==================== MATERIALS ==================== -->
+  <material name="blue">
+    <color rgba="0.2 0.2 1 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1"/>
+  </material>
 
   <!-- ==================== LINKS ==================== -->
-  <!-- Reference frame for entire robot (no geometry) -->
-  <link name="base_link">
-  </link>
+  <!-- base_link: root reference frame. KDL requires no inertia on root link. -->
+  <link name="base_link"/>
 
-  <!-- Robot body -->
+  <!-- chassis: main body box -->
   <link name="chassis">
     <visual>
-      <!-- Center box on base_link -->
+      <!-- Lift visual so bottom sits at base_link z=0 -->
       <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}"/>
       </geometry>
-      <material name="blue">
-        <color rgba="0.2 0.2 1 1"/>
-      </material>
+      <material name="blue"/>
     </visual>
+    <collision>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <mass value="2.0"/>
+      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/>
+    </inertial>
   </link>
 
-  <!-- Caster wheel at back -->
+  <!-- caster_wheel: small sphere at rear, slides on ground -->
   <link name="caster_wheel">
     <visual>
-      <!-- Rotate cylinder to lie flat (Y-axis rotation) -->
-      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
       <geometry>
-        <cylinder radius="${wheel_radius/2}" length="${wheel_width}"/>
+        <sphere radius="${caster_radius}"/>
       </geometry>
       <material name="black"/>
     </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
   </link>
 
   <!-- ==================== JOINTS ==================== -->
-  <!-- Attach chassis to base_link -->
+  <!-- chassis fixed to base_link (chassis frame == base_link frame) -->
   <joint name="chassis_joint" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <origin xyz="-0.1 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- Attach caster to chassis back, at same height as drive wheels -->
+  <!-- caster fixed at rear edge of chassis, sphere center at caster_radius above ground -->
   <joint name="caster_wheel_joint" type="fixed">
     <parent link="chassis"/>
     <child link="caster_wheel"/>
-    <!-- x: rear edge of chassis, y: centered, z: match drive wheel height (wheel_zoff in world = 0.05) -->
-    <origin xyz="${-base_length/2} 0 ${wheel_zoff}" rpy="0 0 0"/>
+    <origin xyz="${-base_length/2 + caster_radius} 0 ${caster_radius}" rpy="0 0 0"/>
   </joint>
 
-  <!-- ==================== MACROS ==================== -->
-  <!-- Wheel template macro (prefix: wheel name, y_reflect: ±1 for left/right) -->
+  <!-- ==================== WHEEL MACRO ==================== -->
+  <!-- Reusable wheel template (params: prefix=left|right, y_reflect=±1) -->
   <xacro:macro name="wheel" params="prefix y_reflect">
     <link name="${prefix}_wheel">
       <visual>
-        <!-- Rotate cylinder to lie flat (default: along Z-axis) -->
+        <!-- Rotate cylinder to lie flat (cylinder default along Z, rotate to Y) -->
         <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
         <geometry>
           <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
         </geometry>
-        <material name="black">
-          <color rgba="0.1 0.1 0.1 1"/>
-        </material>
+        <material name="black"/>
       </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      </inertial>
     </link>
 
-    <!-- Spinning joint (continuous = unlimited rotation) -->
+    <!-- Continuous joint: unlimited rotation around Y-axis -->
     <joint name="${prefix}_wheel_joint" type="continuous">
       <parent link="base_link"/>
       <child link="${prefix}_wheel"/>
-      <!-- Position: forward(x), mirrored sideways(y), up(z) -->
       <origin xyz="${wheel_xoff} ${y_reflect * wheel_ygap} ${wheel_zoff}" rpy="0 0 0"/>
-      <!-- Rotate around Y-axis -->
       <axis xyz="0 1 0"/>
+      <dynamics damping="0.0" friction="0.0"/>
+      <limit effort="10" velocity="10"/>
     </joint>
   </xacro:macro>
 
-  <!-- ==================== INSTANTIATION ==================== -->
-  <!-- Create left and right wheels -->
-  <xacro:wheel prefix="left" y_reflect="1" />
+  <!-- Instantiate left and right wheels -->
+  <xacro:wheel prefix="left"  y_reflect="1" />
   <xacro:wheel prefix="right" y_reflect="-1" />
+
+  <!-- ==================== ROS2 CONTROL ==================== -->
+  <!-- Hardware interface: Gazebo plugin handles joint control and state publishing -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <!-- Left wheel: velocity control + odometry feedback -->
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+
+    <!-- Right wheel: velocity control + odometry feedback -->
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+
+  <!-- ==================== GAZEBO MATERIALS & FRICTION ==================== -->
+  <!-- Gazebo Harmonic uses <visual><material> with RGBA, not the legacy "Gazebo/Color" strings -->
+
+  <gazebo reference="chassis">
+    <visual>
+      <material>
+        <ambient>0.2 0.2 1 1</ambient>
+        <diffuse>0.2 0.2 1 1</diffuse>
+      </material>
+    </visual>
+  </gazebo>
+
+  <gazebo reference="caster_wheel">
+    <visual>
+      <material>
+        <ambient>0.1 0.1 0.1 1</ambient>
+        <diffuse>0.1 0.1 0.1 1</diffuse>
+      </material>
+    </visual>
+    <!-- Low friction so caster slides without resistance -->
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+  </gazebo>
+
+  <gazebo reference="left_wheel">
+    <visual>
+      <material>
+        <ambient>0.1 0.1 0.1 1</ambient>
+        <diffuse>0.1 0.1 0.1 1</diffuse>
+      </material>
+    </visual>
+    <!-- High friction for traction -->
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <visual>
+      <material>
+        <ambient>0.1 0.1 0.1 1</ambient>
+        <diffuse>0.1 0.1 0.1 1</diffuse>
+      </material>
+    </visual>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <!-- Load ros2_control plugin: bridges Gazebo Harmonic physics with ROS 2 controllers -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find mobile_description)/config/my_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
 
 </robot>
