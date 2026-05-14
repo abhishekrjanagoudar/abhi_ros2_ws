@@ -1,7 +1,7 @@
 # Project Progress
 
 ## Current Step
-Step 7: Nav2
+Step 8: Autonomous Navigation Testing
 
 ## Completed Steps
 - [x] Step 1: Workspace Setup
@@ -9,6 +9,8 @@ Step 7: Nav2
 - [x] Step 3: TF tree
 - [x] Step 4: RViz
 - [x] Step 5: Gazebo
+- [x] Step 6: ros2_control integration
+- [x] Step 7: Nav2 & SLAM Setup
 
 ## Notes
 - Starting fresh with a new ROS2 workspace.

@@ -17,7 +17,7 @@
   direction: GZ_TO_ROS
 
 # ── LiDAR Scan ───────────────────────────────────────────────────────────────
-# URDF uses <topic>/scan</topic> (absolute) → Gazebo publishes to /scan
+# URDF uses <topic>scan</topic> (no leading slash) → Gazebo publishes /scan
 - ros_topic_name: "/scan"
   gz_topic_name: "/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"

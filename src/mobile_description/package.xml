@@ -11,6 +11,14 @@
 
   <depend>urdf</depend>
   <depend>xacro</depend>
+  <depend>controller_manager</depend>
+  <depend>ros2_control</depend>
+  <depend>ros2_controllers</depend>
+  <depend>gz_ros2_control</depend>
+  <depend>nav2_bringup</depend>
+  <depend>navigation2</depend>
+  <depend>slam_toolbox</depend>
+
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

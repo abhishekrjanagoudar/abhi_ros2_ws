@@ -1,6 +1,22 @@
 <?xml version="1.0" ?>
 <sdf version='1.6'>
   <world name='default'>
+      <!-- Enable physics engine -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"></plugin>
+    
+    <!-- Enable scene broadcasting (needed for GUI and sensors) -->
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"></plugin>
+    
+    <!-- ENABLE SENSORS -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    
+    <!-- Enable User Commands (Allows ROS to spawn the robot into the world) -->
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"></plugin>
+
+
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose frame=''>0 0 10 0 -0 0</pose>

@@ -112,7 +112,7 @@ def generate_launch_description():
         gz_flags = '-r'
         if not gz_gui:
             gz_flags += ' -s --headless-rendering'
-        gz_args_str = f'{gz_flags} {world_file} --render-engine ogre'
+        gz_args_str = f'{gz_flags} {world_file}'
 
         gz_resource_path = _build_resource_path(model_path)
 

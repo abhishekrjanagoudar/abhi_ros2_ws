@@ -244,19 +244,19 @@
 
   <!-- ==================== LIDAR PLUGIN ==================== -->
   <gazebo reference="laser_frame">
-    <!-- Gazebo Harmonic gpu_lidar sensor
-         Key fixes vs Gazebo Classic:
+    <!-- Gazebo Harmonic lidar sensor
+         NOTE: <gz_frame_id> (not <ignition_frame_id>) is required for Gazebo Harmonic
            - <lidar> block (not <ray>)
            - always_on required for continuous publishing
-           - <ignition_frame_id> sets the ROS header.frame_id
-           - topic "scan" → Gazebo publishes /scan → bridged to ROS /scan -->
+           - <gz_frame_id> sets the ROS header.frame_id
+           - topic "/scan" → Gazebo publishes /scan → bridged to ROS /scan -->
     <sensor name="laser" type="gpu_lidar">
       <pose>0 0 0 0 0 0</pose>
       <topic>/scan</topic>
       <update_rate>10</update_rate>
       <always_on>true</always_on>
       <visualize>true</visualize>
-      <ignition_frame_id>laser_frame</ignition_frame_id>
+      <gz_frame_id>laser_frame</gz_frame_id>
 
       <lidar>
         <scan>
@@ -280,6 +280,4 @@
       </lidar>
     </sensor>
   </gazebo>
-
-
 </robot>
