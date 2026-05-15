@@ -46,6 +46,29 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    """Build and return the top-level LaunchDescription for the full robot stack.
+
+    This is the primary entry point for the ``mobile_description`` package.
+    It composes three subordinate launch systems:
+
+    1. **gazebo.launch.py** (always) — Gazebo world, robot spawn, bridge,
+       and ros2_control controllers.
+    2. **rviz.launch.py** (conditional) — RViz2 visualisation, enabled when
+       ``rviz=true`` OR ``ros_ui=true``.
+    3. **NiceGUI web UI** (conditional) — lightweight browser-based control
+       panel, enabled when ``ros_ui=false`` and the ``nicegui`` package is
+       installed.
+
+    The ``rviz_condition`` uses a ``PythonExpression`` substitution so that
+    the OR logic is evaluated lazily at launch time after both argument
+    values are resolved.
+
+    Returns
+    -------
+    LaunchDescription
+        Four argument declarations, a Gazebo sub-launch, a conditional RViz
+        sub-launch, and an OpaqueFunction for the optional NiceGUI node.
+    """
     pkg_share = get_package_share_directory('mobile_description')
     launch_dir = os.path.join(pkg_share, 'launch')
 
@@ -102,6 +125,28 @@ def generate_launch_description():
     # 3. NiceGUI web UI: starts when ros_ui=false (default)
     #    Wrapped in OpaqueFunction so we can skip gracefully if package missing.
     def maybe_start_nicegui(context, *args, **kwargs):
+        """Optionally start the NiceGUI web UI process.
+
+        Executed by OpaqueFunction after the launch context is ready.
+        Three guard conditions prevent the node from starting:
+
+        1. ``ros_ui=true`` — user chose RViz instead of the web UI.
+        2. ``nicegui`` Python package not installed — avoids hard dependency;
+           prints an install hint instead of raising an ImportError.
+        3. ``src/nicegui_app.py`` not found in the installed package share —
+           allows the package to ship without the optional web UI script.
+
+        Parameters
+        ----------
+        context : LaunchContext
+            Active launch context for resolving ``LaunchConfiguration`` values.
+
+        Returns
+        -------
+        list[Action]
+            A single-element list with the NiceGUI Node, or an empty list if
+            any of the guard conditions above is triggered.
+        """
         ros_ui = LaunchConfiguration('ros_ui').perform(context).lower()
         if ros_ui == 'true':
             return []  # RViz path — skip web UI

@@ -26,8 +26,24 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    """Build and return the LaunchDescription for this backward-compatible wrapper.
+
+    Declares the same three launch arguments as ``gazebo.launch.py`` and
+    forwards them verbatim via ``IncludeLaunchDescription``.  No additional
+    processing is done here — all simulation logic lives in gazebo.launch.py.
+
+    Returns
+    -------
+    LaunchDescription
+        Three argument declarations followed by a single
+        ``IncludeLaunchDescription`` action delegating to gazebo.launch.py.
+    """
+    # Resolve the installed share directory for this package.
     pkg_share = get_package_share_directory('mobile_description')
 
+    # ── Launch argument declarations ──────────────────────────────────────────
+    # Mirror the arguments from gazebo.launch.py so callers get the same
+    # interface whether they invoke sim.launch.py or gazebo.launch.py directly.
     declare_env = DeclareLaunchArgument(
         'env',
         default_value='cpr_office',
@@ -44,14 +60,18 @@ def generate_launch_description():
         description='Enable Gazebo GUI (true) or run headless (false)',
     )
 
+    # ── Delegate to gazebo.launch.py ──────────────────────────────────────────
+    # Forward all three arguments so gazebo.launch.py has the full context.
+    # Using LaunchConfiguration here keeps the values lazy — they resolve at
+    # execution time, not at launch-graph construction time.
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'gazebo.launch.py')
         ),
         launch_arguments={
-            'env': LaunchConfiguration('env'),
-            'env_name': LaunchConfiguration('env_name'),
-            'gz': LaunchConfiguration('gz'),
+            'env':      LaunchConfiguration('env'),       # primary env selector
+            'env_name': LaunchConfiguration('env_name'),  # legacy alias passthrough
+            'gz':       LaunchConfiguration('gz'),         # GUI on/off
         }.items(),
     )
 
@@ -59,5 +79,5 @@ def generate_launch_description():
         declare_env,
         declare_env_name_alias,
         declare_gz,
-        gazebo_launch,
+        gazebo_launch,   # single action: everything else is in gazebo.launch.py
     ])

@@ -1,0 +1,17 @@
+{
+    "pythonVersion": "3.12",
+    "pythonPlatform": "Linux",
+
+    // Directories Pyright/Pylance adds to sys.path for import resolution.
+    // Includes ROS 2 Jazzy site-packages and the local install overlay.
+    "extraPaths": [
+        "/opt/ros/jazzy/lib/python3.12/site-packages",
+        "/home/abhi_ros2_ws/install/mobile_description/lib/python3.12/site-packages"
+    ],
+
+    // "basic" avoids strict complaints about missing type stubs in ROS packages.
+    "typeCheckingMode": "basic",
+
+    // Silence "source not available" warnings that appear for ROS .pyi stub-only packages.
+    "reportMissingModuleSource": "none"
+}
