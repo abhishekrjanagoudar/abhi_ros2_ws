@@ -88,18 +88,18 @@
   </link>
 
   <!-- ==================== JOINTS ==================== -->
-  <!-- chassis fixed to base_link (chassis frame == base_link frame) -->
   <joint name="chassis_joint" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <!-- Raise chassis to give 3cm of ground clearance -->
+    <origin xyz="0 0 0.03" rpy="0 0 0"/>
   </joint>
 
-  <!-- caster fixed at rear edge of chassis, sphere center at caster_radius above ground -->
+  <!-- caster fixed at rear edge of chassis, dropped to compensate for ground clearance -->
   <joint name="caster_wheel_joint" type="fixed">
     <parent link="chassis"/>
     <child link="caster_wheel"/>
-    <origin xyz="${-base_length/2 + caster_radius} 0 ${caster_radius}" rpy="0 0 0"/>
+    <origin xyz="${-base_length/2 + caster_radius} 0 ${caster_radius - 0.03}" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== WHEEL MACRO ==================== -->
@@ -117,7 +117,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
         <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+          <sphere radius="${wheel_radius}"/>
         </geometry>
       </collision>
       <inertial>

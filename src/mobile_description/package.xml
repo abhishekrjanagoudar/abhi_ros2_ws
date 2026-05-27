@@ -8,6 +8,7 @@
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>urdf</depend>
   <depend>xacro</depend>
@@ -18,6 +19,8 @@
   <depend>nav2_bringup</depend>
   <depend>navigation2</depend>
   <depend>slam_toolbox</depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
 
 
   <test_depend>ament_lint_auto</test_depend>

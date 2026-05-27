@@ -13,6 +13,7 @@
 
 controller_manager:
   ros__parameters:
+    use_sim_time: true
     update_rate: 30  # Hz - control loop frequency (must be >= controller publish_rate)
 
     # Controller type registration (instances spawned via `ros2 run controller_manager spawner <name>`)
@@ -31,7 +32,12 @@ controller_manager:
 # -----------------------------------------------------------------------------
 diff_cont:
   ros__parameters:
-    publish_rate: 50.0  # Hz - odometry publish rate
+    use_sim_time: true
+    # Odometry publish rate
+    publish_rate: 50.0  # Hz
+    
+    # Disable TwistStamped so it accepts standard geometry_msgs/Twist (like from teleop_twist_keyboard)
+    use_stamped_vel: false
 
     # Joint names from URDF (must match <joint name="..."> in ros2_control block)
     left_wheel_names:  ['left_wheel_joint']
@@ -47,8 +53,10 @@ diff_cont:
     odom_frame_id:  odom
 
     # Velocity limits (safety - prevents commands that exceed hardware capability)
+    linear.x.has_velocity_limits: true
     linear.x.max_velocity:  1.0    # m/s
     linear.x.min_velocity: -1.0
+    angular.z.has_velocity_limits: true
     angular.z.max_velocity:  2.0   # rad/s
     angular.z.min_velocity: -2.0
 

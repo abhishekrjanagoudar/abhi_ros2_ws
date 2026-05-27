@@ -22,6 +22,7 @@ Usage:
 """
 
 import os
+import subprocess
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
@@ -204,6 +205,17 @@ def generate_launch_description():
         # Build the colon-separated resource path for Gazebo model discovery.
         gz_resource_path = _build_resource_path(model_path)
 
+        # Compile xacro -> URDF string at launch time so we can pass it directly
+        # to 'ros_gz_sim create' via -string. This sidesteps the QoS durability
+        # mismatch: robot_state_publisher publishes /robot_description as
+        # VOLATILE, but ros_gz_sim create subscribes as TRANSIENT_LOCAL — meaning
+        # create misses messages published before it starts. Passing the string
+        # directly is simpler and 100% reliable.
+        xacro_file = os.path.join(pkg_share, 'config', 'robot', 'mobile_robot.urdf.xacro')
+        robot_description_str = subprocess.check_output(
+            ['xacro', xacro_file], text=True
+        )
+
         return [
             # Export resource paths before Gazebo starts so the process inherits them.
             SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', gz_resource_path),
@@ -231,12 +243,13 @@ def generate_launch_description():
             # 3. Spawn robot at world origin
             #    z=0.1 keeps the chassis clear of the ground plane:
             #      wheel_zoff (0.05 m) + wheel_radius (0.05 m) = 0.1 m clearance.
-            #    Reads URDF from /robot_description published by RSP above.
+            #    Pass URDF via -string (compiled above) to avoid the QoS
+            #    durability mismatch between RSP (volatile) and create (transient_local).
             Node(
                 package='ros_gz_sim',
                 executable='create',
                 arguments=[
-                    '-topic', 'robot_description',
+                    '-string', robot_description_str,
                     '-name',  'mobile_robot',
                     '-x', '0.0', '-y', '0.0', '-z', '0.1',
                 ],

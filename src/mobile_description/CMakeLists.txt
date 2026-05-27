@@ -16,6 +16,7 @@ endif()
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(urdf REQUIRED)
 find_package(xacro REQUIRED)
 
@@ -26,6 +27,14 @@ install(DIRECTORY
   config
   rviz
   DESTINATION share/${PROJECT_NAME}
+)
+
+# ── Install Python scripts ────────────────────────────────────────────────────
+# Scripts land in install/mobile_description/lib/mobile_description/ and are
+# executable via: ros2 run mobile_description teleop_controller.py
+install(PROGRAMS
+  scripts/teleop_controller.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # ── Testing ──────────────────────────────────────────────────────────────────

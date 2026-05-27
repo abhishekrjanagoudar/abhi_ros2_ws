@@ -1,43 +1,12 @@
 # 🤖 mobile_description
 
-The `mobile_description` package contains the URDF robot model, launch files, and configurations to simulate and navigate a **differential-drive mobile robot** in **ROS 2 Jazzy + Gazebo Harmonic**.
-
-It brings together the full simulation stack — Gazebo world, robot spawning, ros2_control controllers, ROS–Gazebo topic bridge, SLAM Toolbox mapping, and Nav2 navigation — from a single entry-point launch file.
-
----
-
-## 🏗️ Robot Overview
-
-| Property | Value |
-|---|---|
-| Drive type | Differential drive |
-| Body | 0.4 × 0.3 × 0.15 m box (chassis) |
-| Drive wheels | `left_wheel` / `right_wheel` — radius 0.05 m, continuous joints |
-| Rear support | `caster_wheel` — passive sphere (μ=0.001) |
-| LiDAR | `laser_frame` — GPU LiDAR, 360 rays, 10 Hz, 0.3–12.0 m, σ=0.01 m |
-| Controllers | `joint_broad` (joint states) · `diff_cont` (differential drive) |
-| Command topic | `/diff_cont/cmd_vel` (geometry_msgs/Twist) |
-| Odometry topic | `/diff_cont/odom` (nav_msgs/Odometry) |
-| Scan topic | `/scan` (sensor_msgs/LaserScan) |
-
-### TF Tree
-
-```
-map
-└── odom                  (published by diff_cont / SLAM Toolbox)
-    └── base_link
-        ├── chassis
-        │   ├── caster_wheel
-        │   └── laser_frame   ← LiDAR sensor
-        ├── left_wheel
-        └── right_wheel
-```
+The `mobile_description` package contains launch files and configurations to simplify and speed up starting the differential-drive mobile robot — whether in simulation (Gazebo Harmonic) or on the real hardware.
 
 ---
 
 ## 🚀 Quick Start
 
-Launch the full simulation stack (Gazebo + RViz + controllers):
+To launch the full simulation stack (Gazebo + RViz + controllers), run:
 
 ```bash
 ros2 launch mobile_description robot.launch.py
@@ -51,100 +20,74 @@ ros2 launch mobile_description robot.launch.py gz:=true
 
 ---
 
-## ⚙️ Launch Files
-
-| Launch File | Purpose |
-|---|---|
-| `robot.launch.py` | **Top-level entry point** — composes Gazebo + RViz/NiceGUI |
-| `gazebo.launch.py` | Gazebo world, robot spawn, bridge, ros2_control controllers |
-| `slam.launch.py` | SLAM Toolbox in async / sync / localization / lifelong mode |
-| `navigation.launch.py` | Full Nav2 stack + SLAM Toolbox (autonomous navigation) |
-| `rsp.launch.py` | Robot State Publisher — compiles URDF and broadcasts TF |
-| `rviz.launch.py` | RViz2 with the default display configuration |
-| `sim.launch.py` | Backward-compatible wrapper around `gazebo.launch.py` |
-
----
-
 ## ⚙️ Launch Arguments
 
-### `robot.launch.py`
+You can customize the robot and environment with the following arguments:
 
-#### 1. `env_name`
+### 1. `env_name`
 
-Selects the Gazebo simulation environment. Maps to a subfolder under `config/env/`:
+Selects the Gazebo simulation environment:
 
-- `cpr_office` *(default)* — Standard CPR office environment
-- `cpr_office_construction` — CPR office with construction obstacles
-- `office_small` — Compact office layout
-- `office_env_large` — Large open office floor
-- `office_earthquake` — Post-earthquake scenario
-
----
-
-#### 2. `gz`
-
-Enable or disable the Gazebo GUI window:
-
-- `false` *(default)* — Headless rendering (no GUI, lower resource use)
-- `true` — Opens the Gazebo GUI
+- `cpr_office` *(default)*: Standard CPR office environment.
+- `cpr_office_construction`: CPR office with construction obstacles.
+- `office_small`: Compact office layout.
+- `office_env_large`: Large open office floor.
+- `office_earthquake`: Post-earthquake scenario.
 
 ---
 
-#### 3. `ros_ui`
+### 2. `gz`
 
-Select the visualisation front-end:
+Enable/disable the graphical user interface of gazebo:
 
-- `true` *(default)* — Launches **RViz2** with full ROS data access
-- `false` — Launches the **NiceGUI** web interface (browser-accessible at `localhost`), limited controls
-
-> 💡 RViz requires a display (X11 / Wayland). On remote machines use `ros_ui:=false` or forward the display.
+- `false` *(default)*: no GUI is launched (headless rendering).
+- `true`: GUI is launched.
 
 ---
 
-#### 4. `rviz`
+### 3. `ros_ui`
+
+Select the type of the user interface:
+
+- `true` *(default)*: RVIZ is launched, all ROS data can be accessed.
+- `false`: NiceGUI (webgui), can be accessed in the browser. However, it has just limited options.
+
+---
+
+### 4. `rviz`
 
 Launch RViz2 independently of `ros_ui`:
 
-- `true` *(default)* — RViz is always started
-- `false` — RViz is skipped (only effective when `ros_ui:=false`)
+- `true` *(default)*: RViz is always started.
+- `false`: RViz is skipped (only effective when `ros_ui:=false`).
 
 ---
 
-### `slam.launch.py`
+### 5. `mode` (slam.launch.py)
 
-#### 5. `mode`
+Specifies the SLAM Toolbox operational mode:
 
-SLAM Toolbox operational mode:
-
-- `async` *(default)* — Online asynchronous mapping (recommended, real-time)
-- `sync` — Online synchronous (processes every scan; slower)
-- `localization` — Localise against an existing serialized pose graph
-- `lifelong` — Continuous lifelong mapping
+- `async` *(default)*: Online asynchronous mapping (recommended, real-time).
+- `sync`: Online synchronous mapping.
+- `localization`: Localise against an existing serialized pose graph.
+- `lifelong`: Continuous lifelong mapping.
 
 ---
 
-#### 6. `use_sim_time`
+### 6. `use_sim_time`
 
-Controls the time source across all nodes:
+Controls time source:
 
-- `true` *(default)* — Use Gazebo `/clock` topic (simulation time)
-- `false` — Use wall-clock (real robot deployment)
+- `true` *(default)*: Use simulation time (e.g., Gazebo).
+- `false`: Use real robot clock.
 
 ---
 
-### 🧪 Examples
+### 🧪 Example
 
 ```bash
-# Default: cpr_office, RViz on, headless Gazebo
-ros2 launch mobile_description robot.launch.py
-
-# Large office, Gazebo GUI open
 ros2 launch mobile_description robot.launch.py env_name:=office_env_large gz:=true
 
-# NiceGUI web UI only (no RViz), headless
-ros2 launch mobile_description robot.launch.py ros_ui:=false rviz:=false
-
-# SLAM async mapping session
 ros2 launch mobile_description slam.launch.py mode:=async use_sim_time:=true
 ```
 
@@ -154,179 +97,113 @@ ros2 launch mobile_description slam.launch.py mode:=async use_sim_time:=true
 
 1. **Start the simulation** with the robot at the map origin.
 
-2. **Launch SLAM** in async mode (or your preferred mode):
+2. **Launch SLAM** in async mode (or your preferred mode), set `use_sim_time` depending on your setup:
 
 ```bash
 ros2 launch mobile_description slam.launch.py mode:=async use_sim_time:=true
 ```
 
-3. **Drive the robot** to explore the environment:
+3. **Check the `/map` topic** and drive the robot to explore the environment using a joystick or keyboard:
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard \
-    --ros-args --remap cmd_vel:=/diff_cont/cmd_vel
+ros2 run mobile_description teleop_controller.py
 ```
 
-4. **Monitor the map** in RViz (add a `Map` display on topic `/map`).
+The custom teleop controller in this package automatically publishes to `/diff_cont/cmd_vel` using the correct QoS settings for the diff-drive controller. Keep focus on the teleop terminal and hold `w` to move forward.
 
-5. **Save the static map** for AMCL / Nav2 localisation:
+4. **Save the map** to your target directory:
 
 ```bash
 ros2 run nav2_map_server map_saver_cli -f <map-name>
 ```
 
-> 💡 This produces `<map-name>.yaml` + `<map-name>.pgm`. Place them in `config/env/<env_name>/maps/`.
-
-6. **Serialize the SLAM pose graph** for SLAM Toolbox localisation:
-
-```bash
-ros2 service call /slam_toolbox/serialize_map \
-    slam_toolbox/srv/SerializePoseGraph "{filename: '<map-name>'}"
-```
-
-> 💡 This produces `<map-name>.posegraph` + `<map-name>.data`. Also place in `config/env/<env_name>/maps/`.
+> 💡 This produces `<map-name>.yaml` and `<map-name>.pgm`.
 
 ---
 
-## 📍 Localisation Guide
+## 📍 Localization Guide
 
-Run localisation (no new mapping) using SLAM Toolbox in localization mode:
+Localization allows the robot to determine its pose within a known map. The `mobile_description` stack supports two primary methods:
 
-```bash
-ros2 launch mobile_description slam.launch.py mode:=localization use_sim_time:=true
-```
+1. **AMCL (Adaptive Monte Carlo Localization)**
 
-**Required files:** `<map-name>.posegraph` + `<map-name>.data` in `config/nav2/`.
-
-Alternatively, use **AMCL** via Nav2 directly with a static `.yaml` + `.pgm` map:
+Using Nav2 directly with a static map:
 
 ```bash
 ros2 launch mobile_description navigation.launch.py use_sim_time:=true
 ```
 
----
+`Mechanism:` Uses the particle filter method to match real-time laser scans against a static 2D occupancy grid.
 
-## 🧭 Autonomous Navigation
+`Required Files:` Requires a .yaml and a .pgm (or .png) image file.
 
-The `navigation.launch.py` file starts the **complete Nav2 stack** alongside SLAM Toolbox:
+2. **SLAM Toolbox Localization**
 
-```bash
-ros2 launch mobile_description navigation.launch.py
-```
-
-To use a custom Nav2 parameter file:
+Used for high-precision localization using the serialized pose graph from a previous mapping session:
 
 ```bash
-ros2 launch mobile_description navigation.launch.py \
-    params_file:=/path/to/my_nav2_params.yaml
+ros2 launch mobile_description slam.launch.py mode:=localization use_sim_time:=true
 ```
 
-Nav2 servers started automatically:
+`Mechanism:` Matches current LIDAR data against the optimized pose graph rather than a static image.
 
-| Server | Role |
-|---|---|
-| `planner_server` | Global path planner (NavFn / Smac) |
-| `controller_server` | Local trajectory follower (DWB / MPPI) |
-| `bt_navigator` | Behaviour-tree goal execution |
-| `recoveries_server` | Spin, backup, wait recovery behaviours |
-| `waypoint_follower` | Sequential waypoint execution |
+`Required Files:` Requires both .posegraph and .data files in `config/nav2/`.
 
-Send a goal from the RViz **2D Nav Goal** tool, or via the action interface:
-
-```bash
-ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose \
-    "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 0.5, z: 0.0}, orientation: {w: 1.0}}}}"
-```
+> 💡 For localization to function correctly, ensure the `.posegraph` and `.data` files are appropriately referenced in `mapper_params_localization.yaml`.
 
 ---
 
-## 📦 Bag File Recording
+## 📦 Bag File Management
 
-Record the mandatory topics for SLAM / navigation replay:
+To reduce hardware dependency and setup time, always use ROS 2 Bags for parameter tuning and drift validation.
+
+1. **Recording a Bag**
+
+To record a high-quality dataset for mapping, use the following syntax. These topics are mandatory for `slam_toolbox` mapping:
 
 ```bash
-ros2 bag record -o <bag_name> \
-    /tf /tf_static \
-    /scan \
-    /diff_cont/odom \
-    /joint_states \
-    /clock
+ros2 bag record -o <bag_name> /tf /tf_static /scan /diff_cont/odom /joint_states /clock
 ```
 
-| Topic | Type | Purpose |
-|---|---|---|
-| `/tf` + `/tf_static` | tf2_msgs/TFMessage | Robot kinematic transforms |
-| `/scan` | sensor_msgs/LaserScan | LiDAR data from `laser_frame` |
-| `/diff_cont/odom` | nav_msgs/Odometry | Wheel odometry |
-| `/joint_states` | sensor_msgs/JointState | Wheel encoder positions |
-| `/clock` | rosgraph_msgs/Clock | Simulation time |
+`/tf` & `/tf_static`: Robot kinematic transforms.
+`/scan`: LiDAR data from `laser_frame`.
+`/diff_cont/odom`: Wheel odometry.
+`/joint_states`: Wheel encoder positions.
+`/clock`: Simulation time.
 
-**Replay with clock:**
+2. **Playing a Bag**
+
+Always use the `--clock` flag when replaying data for SLAM to avoid time-sync errors:
 
 ```bash
 ros2 bag play <bag_directory> --clock -r 1.0
 ```
 
-> ⚠️ Always use `--clock` when replaying bags against a SLAM node to avoid TF timestamp mismatches.
-
 ---
 
-## 📁 Package Structure
+## 🗺️ Save and Deploy the Map
 
-```
-mobile_description/
-├── config/
-│   ├── env/                        # Environment worlds + models
-│   │   ├── cpr_office/
-│   │   ├── cpr_office_construction/
-│   │   ├── office_earthquake/
-│   │   ├── office_env_large/
-│   │   └── office_small/
-│   ├── nav2/                       # Nav2 + SLAM Toolbox parameter files
-│   │   ├── nav2_params.yaml
-│   │   ├── mapper_params_online_async.yaml
-│   │   ├── mapper_params_online_sync.yaml
-│   │   └── mapper_params_localization.yaml
-│   └── robot/                      # Robot model + controller configs
-│       ├── mobile_robot.urdf.xacro
-│       ├── my_controllers.yaml
-│       └── ros_gz_bridge.yaml
-├── launch/
-│   ├── robot.launch.py             ← Top-level entry point
-│   ├── gazebo.launch.py
-│   ├── slam.launch.py
-│   ├── navigation.launch.py
-│   ├── rsp.launch.py
-│   ├── rviz.launch.py
-│   └── sim.launch.py
-├── rviz/
-│   └── default.rviz
-├── CMakeLists.txt
-└── package.xml
-```
+You must run two commands to save the map fully. This ensures you have both a visual map for navigation and the internal SLAM state for future editing.
 
----
-
-## 🛠️ Dependencies
-
-| Package | Role |
-|---|---|
-| `xacro` | Compiles `mobile_robot.urdf.xacro` → URDF at launch time |
-| `robot_state_publisher` | Broadcasts the TF tree from the URDF |
-| `ros_gz_sim` | Gazebo Harmonic integration (spawn, bridge) |
-| `gz_ros2_control` | Gazebo plugin for ros2_control hardware interface |
-| `controller_manager` | Manages `joint_broad` + `diff_cont` controllers |
-| `ros2_controllers` | Provides DiffDriveController + JointStateBroadcaster |
-| `slam_toolbox` | Online mapping and localisation |
-| `nav2_bringup` | Full autonomous navigation stack |
-
-Build and source the workspace:
+1. **Save Static Map (for AMCL Localization)**
 
 ```bash
-cd ~/abhi_ros2_ws
-colcon build --symlink-install --packages-select mobile_description
-source install/setup.bash
+ros2 run nav2_map_server map_saver_cli -f <map-name>
 ```
+`Required Files:` .yaml and .pgm (or .png).
+
+`Deployment:` Copy these to `config/env/<env_name>/maps/`
+
+2. **Serialize Pose Graph (for SlamToolbox Localization)**
+
+SlamToolbox localization requires the serialized internal state.
+
+```bash
+ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph "{filename: '<map-name>'}"
+```
+`Required Files:` .posegraph and .data.
+
+`Deployment:` These files must be moved to `config/env/<env_name>/maps/`.
 
 ---
 
