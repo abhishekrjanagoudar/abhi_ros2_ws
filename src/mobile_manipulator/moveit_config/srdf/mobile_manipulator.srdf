@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<!--
+  Semantic Robot Description Format (SRDF)
+  =========================================
+  Defines the semantic layer for MoveIt 2:
+    - Planning groups (arm, gripper)
+    - Named joint states (home, ready, stow, open, closed)
+    - Passive joints (none in this robot)
+    - Disabled self-collision pairs (adjacent links always in contact)
+
+  Groups:
+    arm     — 5-DOF chain: shoulder_pan → wrist_2_link (EE)
+    gripper — 2-DOF: left_finger_joint + right_finger_joint
+
+  IK chain for "arm" group:
+    base_link: arm_base_link
+    tip_link : wrist_2_link
+
+  Collision matrix strategy:
+    All adjacent link pairs are disabled (they share a joint and cannot
+    collide in practice). Self-collision between non-adjacent links
+    is enabled and handled by the planning scene.
+-->
+<robot name="mobile_manipulator">
+
+  <!-- ================================================================ -->
+  <!-- PLANNING GROUPS                                                    -->
+  <!-- ================================================================ -->
+
+  <!--
+    "arm" group: 5-DOF kinematic chain.
+    KDL solves IK from arm_base_link (base) to wrist_2_link (tip).
+    Adding wrist_2_link as the tip gives MoveIt the tool-flange pose
+    from which the gripper offset is applied at the task level.
+  -->
+  <group name="arm">
+    <chain base_link="arm_base_link" tip_link="wrist_2_link"/>
+  </group>
+
+  <!--
+    "gripper" group: 2 prismatic fingers.
+    Defined as joint collection (not a kinematic chain).
+    MoveIt uses this group for gripper open/close trajectory planning.
+  -->
+  <group name="gripper">
+    <joint name="left_finger_joint"/>
+    <joint name="right_finger_joint"/>
+  </group>
+
+  <!-- ================================================================ -->
+  <!-- NAMED JOINT STATES (arm)                                          -->
+  <!-- ================================================================ -->
+
+  <!--
+    home: arm fully upright, minimal footprint, safe for navigation.
+    Values in radians.
+  -->
+  <group_state name="home" group="arm">
+    <joint name="shoulder_pan_joint"  value="0.0"/>
+    <joint name="shoulder_lift_joint" value="-1.5708"/>  <!-- -π/2, pointing up -->
+    <joint name="elbow_joint"         value="0.0"/>
+    <joint name="wrist_1_joint"       value="0.0"/>
+    <joint name="wrist_2_joint"       value="0.0"/>
+  </group_state>
+
+  <!--
+    ready: arm extended forward at waist height, ready to receive a
+    pick command. Shoulder at -45°, elbow at -90°, wrist levelled.
+  -->
+  <group_state name="ready" group="arm">
+    <joint name="shoulder_pan_joint"  value="0.0"/>
+    <joint name="shoulder_lift_joint" value="-0.7854"/>  <!-- -π/4 -->
+    <joint name="elbow_joint"         value="-1.5708"/>  <!-- -π/2 -->
+    <joint name="wrist_1_joint"       value="-0.7854"/>  <!-- -π/4 -->
+    <joint name="wrist_2_joint"       value="0.0"/>
+  </group_state>
+
+  <!--
+    stow: arm folded back, maximises clearance while navigating through
+    narrow corridors. Shoulder_lift at 150° tilts arm rearward.
+  -->
+  <group_state name="stow" group="arm">
+    <joint name="shoulder_pan_joint"  value="0.0"/>
+    <joint name="shoulder_lift_joint" value="-2.6180"/>  <!-- -150° -->
+    <joint name="elbow_joint"         value="-0.5236"/>  <!-- -30° -->
+    <joint name="wrist_1_joint"       value="0.0"/>
+    <joint name="wrist_2_joint"       value="0.0"/>
+  </group_state>
+
+  <!--
+    pre_grasp: arm positioned above pick point, gripper approaching
+    from directly above (wrist pointing down).
+  -->
+  <group_state name="pre_grasp" group="arm">
+    <joint name="shoulder_pan_joint"  value="0.0"/>
+    <joint name="shoulder_lift_joint" value="-0.3491"/>  <!-- -20° -->
+    <joint name="elbow_joint"         value="-1.2217"/>  <!-- -70° -->
+    <joint name="wrist_1_joint"       value="-1.5708"/>  <!-- -90° (wrist points down) -->
+    <joint name="wrist_2_joint"       value="0.0"/>
+  </group_state>
+
+  <!-- ================================================================ -->
+  <!-- NAMED JOINT STATES (gripper)                                      -->
+  <!-- ================================================================ -->
+
+  <group_state name="open" group="gripper">
+    <joint name="left_finger_joint"  value="0.04"/>
+    <joint name="right_finger_joint" value="0.04"/>
+  </group_state>
+
+  <group_state name="closed" group="gripper">
+    <joint name="left_finger_joint"  value="0.0"/>
+    <joint name="right_finger_joint" value="0.0"/>
+  </group_state>
+
+  <group_state name="pinch" group="gripper">
+    <joint name="left_finger_joint"  value="0.005"/>
+    <joint name="right_finger_joint" value="0.005"/>
+  </group_state>
+
+  <!-- ================================================================ -->
+  <!-- END-EFFECTOR                                                       -->
+  <!-- ================================================================ -->
+
+  <!--
+    Declares the gripper group as the end-effector attached to the arm.
+    parent_link is the last link of the arm (wrist_2_link).
+    This lets MoveIt handle the gripper attachment for grasp planning.
+  -->
+  <end_effector name="gripper_ee"
+                parent_link="wrist_2_link"
+                group="gripper"
+                parent_group="arm"/>
+
+  <!-- ================================================================ -->
+  <!-- DISABLED SELF-COLLISION PAIRS                                     -->
+  <!-- ================================================================ -->
+  <!--
+    Adjacent links share a joint — they will always intersect slightly
+    due to URDF geometry overlaps at joint origins.  Disable collision
+    between them to avoid false-positive collision detection.
+
+    Reason codes:
+      Adjacent   — links connected by a joint
+      Default    — always disabled by default (MoveIt heuristic)
+  -->
+
+  <!-- AGV base — arm interface -->
+  <disable_collisions link1="chassis"       link2="arm_base_link"    reason="Adjacent"/>
+
+  <!-- Arm chain — adjacent pairs -->
+  <disable_collisions link1="arm_base_link"  link2="shoulder_link"   reason="Adjacent"/>
+  <disable_collisions link1="shoulder_link"  link2="upper_arm_link"  reason="Adjacent"/>
+  <disable_collisions link1="upper_arm_link" link2="forearm_link"    reason="Adjacent"/>
+  <disable_collisions link1="forearm_link"   link2="wrist_1_link"    reason="Adjacent"/>
+  <disable_collisions link1="wrist_1_link"   link2="wrist_2_link"    reason="Adjacent"/>
+
+  <!-- Arm — gripper interface -->
+  <disable_collisions link1="wrist_2_link"   link2="gripper_base_link" reason="Adjacent"/>
+
+  <!-- Gripper internal -->
+  <disable_collisions link1="gripper_base_link" link2="left_finger_link"  reason="Adjacent"/>
+  <disable_collisions link1="gripper_base_link" link2="right_finger_link" reason="Adjacent"/>
+  <!-- Fingers never touch each other (open gripper) -->
+  <disable_collisions link1="left_finger_link"  link2="right_finger_link" reason="Default"/>
+
+  <!-- AGV base links — never collide with arm base (both fixed to chassis) -->
+  <disable_collisions link1="chassis"       link2="caster_wheel"    reason="Adjacent"/>
+  <disable_collisions link1="base_link"     link2="chassis"         reason="Adjacent"/>
+  <disable_collisions link1="base_link"     link2="left_wheel"      reason="Adjacent"/>
+  <disable_collisions link1="base_link"     link2="right_wheel"     reason="Adjacent"/>
+  <disable_collisions link1="chassis"       link2="laser_frame"     reason="Adjacent"/>
+
+  <!-- Arm near-body pairs (skip-one) — unlikely to self-collide in valid poses -->
+  <disable_collisions link1="arm_base_link"  link2="upper_arm_link"  reason="Never"/>
+  <disable_collisions link1="shoulder_link"  link2="forearm_link"    reason="Never"/>
+
+</robot>

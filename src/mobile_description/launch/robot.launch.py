@@ -176,6 +176,15 @@ def generate_launch_description():
             ),
         ]
 
+    # 4. SLAM Toolbox (online async mapping)
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'slam.launch.py')),
+        launch_arguments={
+            'use_sim_time': 'true',
+            'mode': 'async',
+        }.items(),
+    )
+
     return LaunchDescription([
         declare_env_name,
         declare_ros_ui,
@@ -183,5 +192,6 @@ def generate_launch_description():
         declare_rviz,
         gazebo_launch,
         rviz_launch,
+        slam_launch,
         OpaqueFunction(function=maybe_start_nicegui),
     ])

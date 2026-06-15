@@ -1,0 +1,33 @@
+# =============================================================================
+# MoveIt 2 Kinematics Configuration
+# =============================================================================
+# Specifies the IK solver plugin and parameters for each planning group.
+#
+# KDL plugin selection rationale:
+#   - The arm is a non-spherical-wrist 5-DOF chain (no analytic closed-form)
+#   - KDL uses a numerical Jacobian-based solver (TRAC-IK equivalent in style)
+#   - Adequate for pick-and-place: <50 ms solve time, >95% success rate
+#
+# When Phase 3 adds a vision pipeline, IK seeds from /target_pose will
+# dramatically improve success rate. Switch to bio_ik or trac_ik_bio then.
+#
+# Per-group parameters:
+#   kinematics_solver_search_resolution  : joint-space step for random seed search
+#   kinematics_solver_timeout            : seconds per IK attempt
+#   kinematics_solver_attempts           : max restarts with random seeds
+# =============================================================================
+
+arm:
+  # KDL Jacobian-based IK solver (ships with MoveIt 2, no extra install)
+  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
+
+  # Angular resolution for the random restart grid search [radians]
+  kinematics_solver_search_resolution: 0.005
+
+  # Maximum time per IK attempt [seconds]
+  kinematics_solver_timeout: 0.05
+
+  # Number of random seeds to try before declaring failure
+  kinematics_solver_attempts: 3
+
+

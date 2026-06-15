@@ -1,9 +1,10 @@
-# ROS 2 build artifacts
+# ROS 2 build and log artifacts
 /build/
 /install/
 /log/
 /graphify-out/
 /.antigravitycli/
+/.kiro/
 
 # ROS 1 leftovers
 /devel/
@@ -11,18 +12,26 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 .eggs/
+.pytest_cache/
+.venv/
+env/
+venv/
 
 # C/C++ build artifacts
 *.o
 *.so
 *.a
+*.la
+*.lo
 
 # CMake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+Makefile
 
 # Editor / IDE
 .vscode/
@@ -30,14 +39,49 @@ cmake_install.cmake
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
 
-# OS
+# OS and System Metadata
 .DS_Store
 Thumbs.db
+*.Zone.Identifier
+Zone.Identifier
+
+# Backup archives
+*.zip
+*.tar.gz
+*.tar
+*.tgz
+*.rar
+
+# Datasets and Large Training Files
+*.csv
+*.tsv
+*.xlsx
+*.h5
+*.nc
+/driving_data.csv
+
+# Deep Learning / ML Model Weights
+*.pth
+*.pt
+*.onnx
+*.ckpt
+*.bin
+/robot_driver_model.pth
+
+# Generated Evaluation Plots & Reports
+*.png
+*.jpg
+*.jpeg
+*.svg
+/loss_curve.png
+/REPO_MAP.md
 
 # Tools
 .gitnexus
 .claude/
 .agents/
-.antigravitycli/
 .gemini/

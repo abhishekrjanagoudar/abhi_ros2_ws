@@ -2,26 +2,51 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>mobile_description</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>0.1.0</version>
+  <description>
+    Phase 1: Differential-drive AGV mobile base (Package B).
+    Provides the chassis, drive wheels, caster, and LiDAR URDF/xacro description,
+    gz_ros2_control hardware interface, diff_cont (diff_drive_controller) and
+    joint_broad (joint_state_broadcaster) controllers, Gazebo simulation
+    environments, SLAM/Nav2 assets, and base teleoperation.
+    Designed for ROS 2 Jazzy + Gazebo Harmonic.
+  </description>
   <maintainer email="abhishek.janagoudar@baer-automation.de">abhishek-janagoudar</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
+  <!-- Build tools -->
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <!-- URDF / Xacro -->
   <depend>urdf</depend>
   <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+
+  <!-- ros2_control + controllers -->
   <depend>controller_manager</depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
   <depend>gz_ros2_control</depend>
+  <depend>diff_drive_controller</depend>
+  <depend>joint_state_broadcaster</depend>
+
+  <!-- Gazebo (Harmonic) integration -->
+  <depend>ros_gz_sim</depend>
+  <depend>ros_gz_bridge</depend>
+
+  <!-- Navigation / SLAM -->
   <depend>nav2_bringup</depend>
   <depend>navigation2</depend>
   <depend>slam_toolbox</depend>
+
+  <!-- Teleoperation -->
+  <depend>teleop_twist_keyboard</depend>
+
+  <!-- Python runtime / messages -->
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-
+  <exec_depend>sensor_msgs</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -34,6 +34,10 @@ install(DIRECTORY
 # executable via: ros2 run mobile_description teleop_controller.py
 install(PROGRAMS
   scripts/teleop_controller.py
+  scripts/base_teleop.py
+  scripts/data_collector.py
+  scripts/data_recorder.py
+  scripts/ai_driver.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,0 +1,93 @@
+# =============================================================================
+# MoveIt 2 OMPL Planning Pipeline Configuration
+# =============================================================================
+# Configures the OMPL planning plugin and its per-group planner defaults.
+#
+# Pipeline selection rationale:
+#   RRTConnect: bidirectional RRT, fast for single-query planning, good
+#   convergence in 5D joint space. Default planner for the arm group.
+#   PRM: probabilistic roadmap, better for repeated queries to similar goals.
+#   EST: expansion-based, useful in narrow-passage environments.
+#
+# Adapter chain (applied to every request, in order):
+#   1. AddTimeOptimalParameterization — adds timing to the path for velocity/
+#      acceleration-constrained execution on real hardware
+#   2. ResolveConstraintFrames — normalises constraint frame references
+#   3. FixWorkspaceBounds — fills in missing workspace bounds
+#   4. FixStartStateBounds — projects start state into joint limits
+#   5. FixStartStateCollision — moves start state out of collision
+#   6. FixStartStatePathConstraints — ensures start satisfies path constraints
+# =============================================================================
+
+# MoveIt 2 Jazzy (moveit 2.12+) expects a LIST under the plural key
+# `planning_plugins`. The old singular `planning_plugin` string is ignored,
+# which makes move_group abort with "Planning plugin name is empty or not
+# defined in namespace 'ompl'".
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+
+response_adapters:
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
+
+# Maximum joint-space error for start-state collision fixing
+start_state_max_bounds_error: 0.1
+
+# =============================================================================
+# Global OMPL settings
+# =============================================================================
+# Fraction of the longest valid path segment that may be invalid.
+# Smaller = safer collision checking, more CPU. 0.001 is conservative.
+longest_valid_segment_fraction: 0.001
+
+# =============================================================================
+# Per-group planner configurations
+# =============================================================================
+
+arm:
+  default_planner_config: RRTConnectkConfigDefault
+
+  # Planners available for this group (user can switch in RViz MotionPlanning panel)
+  planner_configs:
+    - RRTConnectkConfigDefault
+    - ESTkConfigDefault
+    - PRMkConfigDefault
+    - LazyPRMkConfigDefault
+    - BITstarkConfigDefault
+
+gripper:
+  default_planner_config: RRTConnectkConfigDefault
+  planner_configs:
+    - RRTConnectkConfigDefault
+
+# =============================================================================
+# Planner-specific parameters
+# =============================================================================
+
+RRTConnectkConfigDefault:
+  type: geometric::RRTConnect
+  range: 0.0             # 0 = auto-computed from state space size
+
+ESTkConfigDefault:
+  type: geometric::EST
+  range: 0.0
+  goal_bias: 0.05
+
+PRMkConfigDefault:
+  type: geometric::PRM
+  max_nearest_neighbors: 10
+
+LazyPRMkConfigDefault:
+  type: geometric::LazyPRM
+  range: 0.0
+
+BITstarkConfigDefault:
+  type: geometric::BITstar
+  # BIT* is anytime — finds a solution quickly then improves it

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mobile_manipulator</name>
+  <version>0.1.0</version>
+  <description>
+    Phase 2: Intelligent Mobile Manipulator.
+    Mounts a 5-DOF robotic arm and 2-finger gripper on the mobile_description AGV.
+    Provides MoveIt 2 integration, IK/FK utilities, and a pick-and-place demo.
+    Designed for ROS 2 Jazzy + Gazebo Harmonic.
+  </description>
+  <maintainer email="abhishek.janagoudar@baer-automation.de">abhishek-janagoudar</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- Build tools -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <!-- Existing AGV package (URDF included via xacro:include) -->
+  <depend>mobile_description</depend>
+
+  <!-- URDF / Xacro -->
+  <depend>urdf</depend>
+  <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+
+  <!-- ros2_control + controllers -->
+  <depend>controller_manager</depend>
+  <depend>ros2_control</depend>
+  <depend>ros2_controllers</depend>
+  <depend>gz_ros2_control</depend>
+  <depend>joint_trajectory_controller</depend>
+  <depend>joint_state_broadcaster</depend>
+
+  <!-- Gazebo simulation bridge -->
+  <depend>ros_gz_sim</depend>
+  <depend>ros_gz_bridge</depend>
+
+  <!-- Visualization -->
+  <depend>rviz2</depend>
+
+  <!-- Teleoperation -->
+  <depend>teleop_twist_keyboard</depend>
+
+  <!-- MoveIt 2 -->
+  <depend>moveit_ros_move_group</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_ros_planning</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_msgs</depend>
+  <depend>moveit_simple_controller_manager</depend>
+
+  <!-- ROS 2 Nav2 (used by pick-and-place demo) -->
+  <depend>nav2_msgs</depend>
+
+  <!-- Python runtime -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>control_msgs</exec_depend>
+  <exec_depend>action_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-yaml</test_depend>
+  <test_depend>python3-hypothesis</test_depend>
+  <test_depend>xacro</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

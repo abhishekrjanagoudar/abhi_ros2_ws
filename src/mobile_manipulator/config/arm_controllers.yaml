@@ -1,0 +1,119 @@
+# =============================================================================
+# Arm + Gripper Controller Configuration
+# =============================================================================
+# Loaded at launch time via:
+#   ros2 run controller_manager spawner arm_controller --param-file arm_controllers.yaml
+#   ros2 run controller_manager spawner gripper_controller --param-file arm_controllers.yaml
+#
+# These controllers share the controller_manager process started by the
+# gz_ros2_control plugin (from mobile_description). The arm joints are
+# registered via the ArmSystem ros2_control block in mobile_manipulator.urdf.xacro.
+#
+# Controller topology:
+#   arm_controller       → JointTrajectoryController (position)  → 5 arm joints
+#   gripper_controller   → JointTrajectoryController (position)  → 2 finger joints
+# =============================================================================
+
+controller_manager:
+  ros__parameters:
+    use_sim_time: true
+    update_rate: 50   # Hz — arm needs higher rate than AGV (30 Hz)
+
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+# -----------------------------------------------------------------------------
+# Arm Trajectory Controller
+# -----------------------------------------------------------------------------
+# Executes joint-space trajectories for the 5-DOF arm.
+# MoveIt 2 sends goals to: /arm_controller/follow_joint_trajectory
+# -----------------------------------------------------------------------------
+arm_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+
+    # Position command interface — velocity/effort feedforward optional
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    # Publish joint states at 100 Hz for smooth TF/RViz visualisation
+    state_publish_rate: 100.0
+
+    # MoveIt action server monitoring rate
+    action_monitor_rate: 20.0
+
+    # Allow the controller to receive partial joint goals (useful for debugging)
+    allow_partial_joints_goal: false
+
+    # Open-loop position control: no PID feedback in simulation
+    open_loop_control: true
+
+    # Allow MoveIt to integrate velocity goals into positions
+    allow_integration_in_goal_trajectories: true
+
+    # Trajectory interpolation: cubic spline for smooth motion
+    interpolation_method: splines
+
+    # Goal tolerance per joint [radians]
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 0.0           # 0.0 = disabled (no time limit on settling)
+      shoulder_pan_joint:
+        goal: 0.05
+      shoulder_lift_joint:
+        goal: 0.05
+      elbow_joint:
+        goal: 0.05
+      wrist_1_joint:
+        goal: 0.05
+      wrist_2_joint:
+        goal: 0.05
+
+# -----------------------------------------------------------------------------
+# Gripper Trajectory Controller
+# -----------------------------------------------------------------------------
+# Controls both finger joints symmetrically.
+# Open:  command [0.04, 0.04]  (fingers spread 4 cm each)
+# Close: command [0.00, 0.00]  (fingers fully closed)
+# MoveIt 2 sends goals to: /gripper_controller/follow_joint_trajectory
+# -----------------------------------------------------------------------------
+gripper_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - left_finger_joint
+      - right_finger_joint
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    state_publish_rate: 50.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: true
+    open_loop_control: true
+    allow_integration_in_goal_trajectories: false
+
+    constraints:
+      stopped_velocity_tolerance: 0.005
+      goal_time: 2.0
+      left_finger_joint:
+        goal: 0.005
+      right_finger_joint:
+        goal: 0.005

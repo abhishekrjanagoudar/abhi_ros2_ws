@@ -1,0 +1,53 @@
+# =============================================================================
+# MoveIt 2 Controller Manager Configuration
+# =============================================================================
+# Maps MoveIt 2 planning groups to the ros2_control action servers so that
+# MoveIt can send trajectories to the running controllers.
+#
+# Interface:
+#   MoveIt publishes a JointTrajectory goal to the controller's action server.
+#   The JointTrajectoryController (arm_controller / gripper_controller) executes
+#   the trajectory on the hardware.
+#
+# Action server names follow the ros2_control convention:
+#   /arm_controller/follow_joint_trajectory
+#   /gripper_controller/follow_joint_trajectory
+# =============================================================================
+
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - arm_controller
+    - gripper_controller
+
+# -----------------------------------------------------------------------------
+# Arm trajectory controller
+# -----------------------------------------------------------------------------
+arm_controller:
+  # FollowJointTrajectory bridges MoveIt to JointTrajectoryController
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+
+  # Mark as default so MoveIt selects this controller for the "arm" group
+  # without requiring explicit controller selection
+  default: true
+
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+
+# -----------------------------------------------------------------------------
+# Gripper trajectory controller
+# -----------------------------------------------------------------------------
+gripper_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+
+  joints:
+    - left_finger_joint
+    - right_finger_joint

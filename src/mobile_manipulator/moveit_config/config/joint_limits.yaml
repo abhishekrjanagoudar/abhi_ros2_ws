@@ -1,0 +1,76 @@
+# =============================================================================
+# MoveIt 2 Joint Limits Configuration
+# =============================================================================
+# Per-joint position, velocity, and acceleration limits used by MoveIt 2 for
+# trajectory generation and Cartesian path planning.
+#
+# Values match the URDF joint limits exactly — MoveIt enforces the more
+# restrictive of these and the URDF limits.
+#
+# has_*_limits: true  → enforce the corresponding limit during planning
+# max_*        : maximum absolute value (symmetric unless min_* specified)
+# =============================================================================
+
+joint_limits:
+  shoulder_pan_joint:
+    has_position_limits: true
+    min_position: -3.14159   # -π
+    max_position:  3.14159   # +π
+    has_velocity_limits: true
+    max_velocity: 1.5        # rad/s — comfortable for a shoulder joint
+    has_acceleration_limits: true
+    max_acceleration: 3.0    # rad/s² — smooth ramp
+
+  shoulder_lift_joint:
+    has_position_limits: true
+    min_position: -1.5708    # -π/2
+    max_position:  1.5708    # +π/2
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+
+  elbow_joint:
+    has_position_limits: true
+    min_position: -3.14159   # -π
+    max_position:  0.0
+    has_velocity_limits: true
+    max_velocity: 2.0        # rad/s — elbow can move faster (lighter distal link)
+    has_acceleration_limits: true
+    max_acceleration: 4.0
+
+  wrist_1_joint:
+    has_position_limits: true
+    min_position: -3.14159
+    max_position:  3.14159
+    has_velocity_limits: true
+    max_velocity: 2.5
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+
+  wrist_2_joint:
+    has_position_limits: true
+    min_position: -3.14159
+    max_position:  3.14159
+    has_velocity_limits: true
+    max_velocity: 2.5
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+
+  left_finger_joint:
+    has_position_limits: true
+    min_position: 0.0
+    max_position: 0.04       # 40 mm maximum opening
+    has_velocity_limits: true
+    max_velocity: 0.2        # m/s — slow, deliberate gripper motion
+    has_acceleration_limits: true
+    max_acceleration: 0.5    # m/s²
+
+  right_finger_joint:
+    has_position_limits: true
+    min_position: 0.0
+    max_position: 0.04
+    has_velocity_limits: true
+    max_velocity: 0.2
+    has_acceleration_limits: true
+    max_acceleration: 0.5
